@@ -1,47 +1,61 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 14 17:52:01 2020
+import pygame
 
-@author: cwerw
-"""
+# Import pygame.locals for easier access to key coordinates
+# Updated to conform to flake8 and black standards
+from pygame.locals import (
+    K_UP,
+    K_DOWN,
+    K_LEFT,
+    K_RIGHT,
+    K_ESCAPE,
+    KEYDOWN,
+    QUIT,
+)
 
-import pygame, sys
-from pygame.locals import *
+# Define constants for the screen width and height
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
-# Initialize program
+# Define a player object by extending pygame.sprite.Sprite
+# The surface drawn on the screen is now an attribute of 'player'
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Player, self).__init__()
+        self.surf = pygame.Surface((75, 25))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect()
+
+# Initialize pygame
 pygame.init()
- 
-# Assign FPS a value
-FPS = 30
-FramePerSec = pygame.time.Clock()
- 
-# Setting up color objects
-BLUE  = (0, 0, 255)
-RED   = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
 
-# Setup a 300x300 pixel display with caption
-DISPLAYSURF = pygame.display.set_mode((300,300))
-DISPLAYSURF.fill(WHITE)
-pygame.display.set_caption("Example")
- 
-# Creating Lines and Shapes
-pygame.draw.line(DISPLAYSURF, BLUE, (150,130), (130,170))
-pygame.draw.line(DISPLAYSURF, BLUE, (150,130), (170,170))
-pygame.draw.line(DISPLAYSURF, GREEN, (130,170), (170,170))
-pygame.draw.circle(DISPLAYSURF, BLACK, (100,50), 30)
-pygame.draw.circle(DISPLAYSURF, BLACK, (200,50), 30)
-pygame.draw.rect(DISPLAYSURF, RED, (100, 200, 100, 50), 2)
-pygame.draw.rect(DISPLAYSURF, BLACK, (110, 260, 80, 5))
- 
-# Beginning Game Loop
-while True:
-    pygame.display.update()
+# Create the screen object
+# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Instantiate player. Right now, this is just a rectangle.
+player = Player()
+
+# Variable to keep the main loop running
+running = True
+
+# Main loop
+while running:
+    # for loop through the event queue
     for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-   
-    FramePerSec.tick(FPS)
+        # Check for KEYDOWN event
+        if event.type == KEYDOWN:
+            # If the Esc key is pressed, then exit the main loop
+            if event.key == K_ESCAPE:
+                running = False
+        # Check for QUIT event. If QUIT, then set running to false.
+        elif event.type == QUIT:
+            running = False
+
+    # Fill the screen with black
+    screen.fill((0, 0, 0))
+
+    # Draw the player on the screen
+    screen.blit(player.surf, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+
+    # Update the display
+    pygame.display.flip()
