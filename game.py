@@ -15,6 +15,22 @@ from pygame.locals import (
 
 
 
+def main():
+    level = 0
+    if len(sys.argv) > 2:
+        user = sys.argv[1]
+        level = sys.argv[2]
+    elif len(sysargv) >1:
+        user = sys.argv[1]
+    if(user == 'LEARN'):
+        USER='LEARN'
+    elif(user == 'EVALUATE")
+        USER = 'EVALUATE
+    else:
+        USER = 'HUMAN'
+    if(level>=0 && level <=1):
+        LEVEL=level
+    
 
 SCREEN_WIDTH = 256
 SCREEN_HEIGHT = 256
@@ -162,7 +178,7 @@ while running:
     else:
         cooldown=cooldown-1
         
-    if(cooldown >= 2):
+    
         
     # Update the position of our enemies
     if(MAP !=0):
@@ -190,3 +206,6 @@ while running:
     pygame.display.flip()
 pygame.quit()
 
+if __name__ == "__main__":
+    main()
+    
