@@ -1,10 +1,7 @@
-# Import the pygame module
 import pygame
-# Import random for random numbers
 import random
+import sys
 
-# Import pygame.locals for easier access to key coordinates
-# Updated to conform to flake8 and black standards
 from pygame.locals import (
     RLEACCEL,
     K_UP,
@@ -17,10 +14,11 @@ from pygame.locals import (
 )
 
 
-# Define constants for the screen width and height
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
 
+
+SCREEN_WIDTH = 256
+SCREEN_HEIGHT = 256
+MAP=0
 
 # Define the Player object extending pygame.sprite.Sprite
 # The surface we draw on the screen is now a property of 'player'
@@ -29,18 +27,19 @@ class Player(pygame.sprite.Sprite):
         super(Player, self).__init__()
         self.surf = pygame.image.load("rabbit_forward_still.png").convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect(center=(400,550))
+        self.surf = pygame.transform.scale(self.surf,(8,10))
+        self.rect = self.surf.get_rect(center=(128,240))
 
     # Move the sprite based on keypresses
     def update(self, pressed_keys):
         if pressed_keys[K_UP]:
-            self.rect.move_ip(0, -50)
+            self.rect.move_ip(0, -16)
         if pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, 50)
+            self.rect.move_ip(0, 16)
         if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-50, 0)
+            self.rect.move_ip(-16, 0)
         if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(50, 0)
+            self.rect.move_ip(16, 0)
 
         # Keep player on the screen
         if self.rect.left < 0:
@@ -60,11 +59,12 @@ class Enemy(pygame.sprite.Sprite):
         super(Enemy, self).__init__()
         self.surf = pygame.image.load("blue_van.png").convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.surf = pygame.transform.scale(self.surf,(24,12))
         # The starting position is randomly generated, as is the speed
         self.rect = self.surf.get_rect(
             center=(
-                -50,
-                450,
+                -20,
+                208,
             )
         )
         self.speed = 5
@@ -73,21 +73,38 @@ class Enemy(pygame.sprite.Sprite):
     # Remove it when it passes the left edge of the screen
     def update(self):
         self.rect.move_ip(self.speed, 0)
-        if self.rect.left > 800:
+        if self.rect.left > 256:
             self.kill()
+
+# Define the enemy object extending pygame.sprite.Sprite
+# The surface we draw on the screen is now a property of 'enemy'
+class Door(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Door, self).__init__()
+        self.surf = pygame.image.load("castledoors.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.surf = pygame.transform.scale(self.surf,(16,24))
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(0, 15)*16,
+                8,
+            )
+        )
+
 
 
 class Background(pygame.sprite.Sprite):
     def __init__(self, image_file, location):
         pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
         self.image = pygame.image.load(image_file)
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = location
         
 # Initialize pygame
 pygame.init()
 clock = pygame.time.Clock()
-BackGround = Background('map1.png', [0,0])
+BackGround = Background('map0.png', [0,0])
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -105,10 +122,14 @@ player = Player()
 enemies = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
-
+doors = pygame.sprite.Group()
 # Variable to keep our main loop running
 running = True
 cooldown = 0
+
+new_door=Door()
+doors.add(new_door)
+all_sprites.add(new_door)
 
 # Our main loop
 while running:
@@ -140,8 +161,12 @@ while running:
             cooldown = 6
     else:
         cooldown=cooldown-1
+        
+    if(cooldown >= 2):
+        
     # Update the position of our enemies
-    enemies.update()
+    if(MAP !=0):
+        enemies.update()
 
     # Fill the screen with black
     screen.fill([255, 255, 255])
@@ -156,10 +181,12 @@ while running:
         # If so, remove the player and stop the loop
        player.kill()
        running = False
-    clock.tick(30)
+    if pygame.sprite.spritecollide(player, doors, dokill=False):
+       player.kill()
+       running = False
+
+    clock.tick(60)
     # Flip everything to the display
     pygame.display.flip()
 pygame.quit()
 
-
-    
