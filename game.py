@@ -1,12 +1,12 @@
 # Import the pygame module
 import pygame
-
 # Import random for random numbers
 import random
 
 # Import pygame.locals for easier access to key coordinates
 # Updated to conform to flake8 and black standards
 from pygame.locals import (
+    RLEACCEL,
     K_UP,
     K_DOWN,
     K_LEFT,
@@ -15,6 +15,7 @@ from pygame.locals import (
     KEYDOWN,
     QUIT,
 )
+
 
 # Define constants for the screen width and height
 SCREEN_WIDTH = 800
@@ -26,20 +27,20 @@ SCREEN_HEIGHT = 600
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((75, 25))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect()
+        self.surf = pygame.image.load("rabbit_forward_still.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(center=(400,550))
 
     # Move the sprite based on keypresses
     def update(self, pressed_keys):
         if pressed_keys[K_UP]:
-            self.rect.move_ip(0, -20)
+            self.rect.move_ip(0, -50)
         if pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, 20)
+            self.rect.move_ip(0, 50)
         if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-20, 0)
+            self.rect.move_ip(-50, 0)
         if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(20, 0)
+            self.rect.move_ip(50, 0)
 
         # Keep player on the screen
         if self.rect.left < 0:
@@ -57,34 +58,43 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.Surface((20, 10))
-        self.surf.fill((255, 255, 255))
+        self.surf = pygame.image.load("blue_van.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        # The starting position is randomly generated, as is the speed
         self.rect = self.surf.get_rect(
             center=(
-                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-                random.randint(0, SCREEN_HEIGHT),
+                -50,
+                450,
             )
         )
-        self.speed = random.randint(5, 20)
+        self.speed = 5
 
     # Move the sprite based on speed
     # Remove it when it passes the left edge of the screen
     def update(self):
-        self.rect.move_ip(-self.speed, 0)
-        if self.rect.right < 0:
+        self.rect.move_ip(self.speed, 0)
+        if self.rect.left > 800:
             self.kill()
 
 
+class Background(pygame.sprite.Sprite):
+    def __init__(self, image_file, location):
+        pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
+        self.image = pygame.image.load(image_file)
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = location
+        
 # Initialize pygame
 pygame.init()
 clock = pygame.time.Clock()
+BackGround = Background('map1.png', [0,0])
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Create a custom event for adding a new enemy.
 ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 250)
+pygame.time.set_timer(ADDENEMY, 2000)
 
 # Create our 'player'
 player = Player()
@@ -102,6 +112,7 @@ cooldown = 0
 
 # Our main loop
 while running:
+
     # Look at every event in the queue
     for event in pygame.event.get():
         # Did the user hit a key?
@@ -130,10 +141,11 @@ while running:
     else:
         cooldown=cooldown-1
     # Update the position of our enemies
-  #  enemies.update()
+    enemies.update()
 
     # Fill the screen with black
-    screen.fill((0, 0, 0))
+    screen.fill([255, 255, 255])
+    screen.blit(BackGround.image, BackGround.rect)
 
     # Draw all our sprites
     for entity in all_sprites:
@@ -142,9 +154,12 @@ while running:
     # Check if any enemies have collided with the player
     if pygame.sprite.spritecollideany(player, enemies):
         # If so, remove the player and stop the loop
-        player.kill()
-        running = False
+       player.kill()
+       running = False
     clock.tick(30)
-    print(cooldown)
     # Flip everything to the display
     pygame.display.flip()
+pygame.quit()
+
+
+    
