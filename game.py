@@ -15,25 +15,10 @@ from pygame.locals import (
 
 
 
-def main():
-    level = 0
-    if len(sys.argv) > 2:
-        user = sys.argv[1]
-        level = sys.argv[2]
-    elif len(sysargv) >1:
-        user = sys.argv[1]
-    if(user == 'LEARN'):
-        USER='LEARN'
-    elif(user == 'EVALUATE")
-        USER = 'EVALUATE
-    else:
-        USER = 'HUMAN'
-    if(level>=0 && level <=1):
-        LEVEL=level
-    
-
-SCREEN_WIDTH = 256
-SCREEN_HEIGHT = 256
+SCALE = 16
+SCREEN_SIZE=SCALE*16
+SCREEN_WIDTH = SCREEN_SIZE
+SCREEN_HEIGHT = SCREEN_SIZE
 MAP=0
 
 # Define the Player object extending pygame.sprite.Sprite
@@ -41,21 +26,44 @@ MAP=0
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.image.load("rabbit_forward_still.png").convert_alpha()
+        self.image_still = pygame.image.load("rabbit_forward_still.png").convert_alpha()
+        self.image_run1 = pygame.image.load("rabbit_forward_half.png").convert_alpha()
+        self.image_run2 = pygame.image.load("rabbit_forward_jump.png").convert_alpha()
+        self.surf = self.image_still
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.surf = pygame.transform.scale(self.surf,(8,10))
+        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
         self.rect = self.surf.get_rect(center=(128,240))
+        self.cooldown=0
+        self.angle=0
 
     # Move the sprite based on keypresses
     def update(self, pressed_keys):
-        if pressed_keys[K_UP]:
-            self.rect.move_ip(0, -16)
-        if pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, 16)
-        if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-16, 0)
-        if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(16, 0)
+        if(self.cooldown <= 0):
+            if pressed_keys[K_UP]:
+                self.rect.move_ip(0, -16)
+                self.cooldown = 5
+                self.angle=0
+            if pressed_keys[K_DOWN]:
+                self.rect.move_ip(0, 16)
+                self.cooldown = 5
+                self.angle=180
+            if pressed_keys[K_LEFT]:
+                self.rect.move_ip(-16, 0)
+                self.cooldown = 5
+                self.angle=90
+            if pressed_keys[K_RIGHT]:
+                self.rect.move_ip(16, 0)
+                self.cooldown = 5
+                self.angle=270
+        elif(self.cooldown >=1):
+            self.cooldown = self.cooldown -1
+        if(self.cooldown >=3):
+            self.surf = self.image_run2
+        else:
+            self.surf = self.image_still
+        self.surf = pygame.transform.rotate(self.surf,self.angle)
+        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
+
 
         # Keep player on the screen
         if self.rect.left < 0:
@@ -75,7 +83,7 @@ class Enemy(pygame.sprite.Sprite):
         super(Enemy, self).__init__()
         self.surf = pygame.image.load("blue_van.png").convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.surf = pygame.transform.scale(self.surf,(24,12))
+        self.surf = pygame.transform.scale(self.surf,(SCALE*2,SCALE))
         # The starting position is randomly generated, as is the speed
         self.rect = self.surf.get_rect(
             center=(
@@ -99,10 +107,10 @@ class Door(pygame.sprite.Sprite):
         super(Door, self).__init__()
         self.surf = pygame.image.load("castledoors.png").convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.surf = pygame.transform.scale(self.surf,(16,24))
+        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE)
         self.rect = self.surf.get_rect(
             center=(
-                random.randint(0, 15)*16,
+                random.randint(0, 15)*SCALE,
                 8,
             )
         )
@@ -171,14 +179,8 @@ while running:
 
     # Get the set of keys pressed and check for user input
     pressed_keys = pygame.key.get_pressed()
-    if(cooldown <= 0):
-        if(event.type == pygame.KEYDOWN):
-            player.update(pressed_keys)
-            cooldown = 6
-    else:
-        cooldown=cooldown-1
-        
-    
+    player.update(pressed_keys)
+
         
     # Update the position of our enemies
     if(MAP !=0):
@@ -206,6 +208,3 @@ while running:
     pygame.display.flip()
 pygame.quit()
 
-if __name__ == "__main__":
-    main()
-    
