@@ -20,6 +20,8 @@ SCREEN_SIZE=SCALE*16
 SCREEN_WIDTH = SCREEN_SIZE
 SCREEN_HEIGHT = SCREEN_SIZE
 MAP=0
+ROT = random.randrange(4)*90
+
 
 # Define the Player object extending pygame.sprite.Sprite
 # The surface we draw on the screen is now a property of 'player'
@@ -32,7 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.surf = self.image_still
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
-        self.rect = self.surf.get_rect(center=(128,240))
+        self.rect = self.surf.get_rect(center=(int(SCREEN_SIZE/2),int(SCALE*15.5)))
         self.cooldown=0
         self.angle=0
 
@@ -107,11 +109,11 @@ class Door(pygame.sprite.Sprite):
         super(Door, self).__init__()
         self.surf = pygame.image.load("castledoors.png").convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE)
+        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
         self.rect = self.surf.get_rect(
             center=(
                 random.randint(0, 15)*SCALE,
-                8,
+                int(SCALE/2),
             )
         )
 
@@ -154,6 +156,8 @@ cooldown = 0
 new_door=Door()
 doors.add(new_door)
 all_sprites.add(new_door)
+end='dnf'
+
 
 # Our main loop
 while running:
@@ -199,12 +203,14 @@ while running:
         # If so, remove the player and stop the loop
        player.kill()
        running = False
+       end='end'
     if pygame.sprite.spritecollide(player, doors, dokill=False):
        player.kill()
        running = False
+       end='win'
 
     clock.tick(60)
     # Flip everything to the display
     pygame.display.flip()
 pygame.quit()
-
+print(end)
