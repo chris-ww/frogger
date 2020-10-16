@@ -4,6 +4,10 @@ import sys
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
+import os
+import math
+
+
 
 from pygame.locals import (
     RLEACCEL,
@@ -27,12 +31,50 @@ ROT = random.randrange(4)*90
 class Chrisww_gym(gym.Env):
    
     def __init__(self):
+        pygame.init()
+        self.action_space = spaces.Discrete(4)
+       # self.level=1
+       # self.score=0
+       # self.lives=5
+        self.clock = pygame.time.Clock()
+        self.BackGround = Background(os.path.join(os.path.dirname(__file__), "pictures/map0.png"), [0,0])
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+       # self.cooldown= 0
+        self.player = Player()
+       # new_door=Door()
+       # self.doors = pygame.sprite.Group()
+       # self.doors.add(new_door)
+        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites.add(self.player)
+       # self.all_sprites.add(new_door)
+        self.screen.fill([255, 255, 255])
+        self.screen.blit(self.BackGround.image, self.BackGround.rect)
+        
+
+
+    def step(self, action):
+       # self.player.update(action)
+    
+        self.screen.fill([255, 255, 255])
+        self.screen.blit(self.BackGround.image, self.BackGround.rect)
+        self.player.update(action)
+
+        for entity in self.all_sprites:
+            self.screen.blit(entity.surf, entity.rect)
+       #     
+       # if pygame.sprite.spritecollide(self.player, self.doors, dokill=False):
+       #    self.player.kill()
+
+        self.clock.tick(60)
+        
+    
+    def reset(self):
         self.level=1
         self.score=0
         self.lives=5
         self.scale=16
         self.clock = pygame.time.Clock()
-        self.BackGround = Background('map0.png', [0,0])
+        self.BackGround = Background(os.path.join(os.path.dirname(__file__), "pictures/map0.png"), [0,0])
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.cooldown= 0
         self.player = Player()
@@ -43,77 +85,47 @@ class Chrisww_gym(gym.Env):
         self.all_sprites = pygame.sprite.Group()
         self.all_sprites.add(self.player)
         self.all_sprites.add(new_door)
-        pygame.init()
-
-
-    def step(self, action):    
-        pressed_keys = action
-        self.player.update(pressed_keys)
-    
+        self.action_space = spaces.Discrete(4)
         self.screen.fill([255, 255, 255])
         self.screen.blit(self.BackGround.image, self.BackGround.rect)
-
-        for entity in self.all_sprites:
-            self.screen.blit(entity.surf, entity.rect)
-            
-        if pygame.sprite.spritecollide(self.player, self.doors, dokill=False):
-           self.player.kill()
-    
-        self.clock.tick(60)
-        self.render()
+        pygame.init()
         
-    
-    def reset(self):
-        self.level=1
-        self.time=0
-        self.score=0
-        self.lives=5
-    
     def render(self, mode='human', close=False):
         pygame.display.flip()
 
+    def close(self):
+        pygame.quit()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.image_still = pygame.image.load("rabbit_forward_still.png").convert_alpha()
-        self.image_run1 = pygame.image.load("rabbit_forward_half.png").convert_alpha()
-        self.image_run2 = pygame.image.load("rabbit_forward_jump.png").convert_alpha()
-        self.surf = self.image_still
+        self.image= pygame.image.load(os.path.join(os.path.dirname(__file__), "pictures/robot.png")).convert()
+        self.image = pygame.transform.scale(self.image,(SCALE,SCALE))
+        self.surf = self.image
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
-        self.rect = self.surf.get_rect(center=(int(SCREEN_SIZE/2),int(SCALE*15.5)))
+        self.x=int(SCREEN_SIZE/2)
+        self.y=int(SCALE*15.5)
+        self.rect = self.surf.get_rect(center=(self.x,self.y))
         self.cooldown=0
         self.angle=0
 
-    # Move the sprite based on keypresses
-    def update(self, pressed_keys):
-        if(self.cooldown <= 0):
-            if pressed_keys[K_UP]:
-                self.rect.move_ip(0, -16)
-                self.cooldown = 5
-                self.angle=0
-            if pressed_keys[K_DOWN]:
-                self.rect.move_ip(0, 16)
-                self.cooldown = 5
-                self.angle=180
-            if pressed_keys[K_LEFT]:
-                self.rect.move_ip(-16, 0)
-                self.cooldown = 5
-                self.angle=90
-            if pressed_keys[K_RIGHT]:
-                self.rect.move_ip(16, 0)
-                self.cooldown = 5
-                self.angle=270
-        elif(self.cooldown >=1):
-            self.cooldown = self.cooldown -1
-        if(self.cooldown >=3):
-            self.surf = self.image_run2
-        else:
-            self.surf = self.image_still
-        self.surf = pygame.transform.rotate(self.surf,self.angle)
-        self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
-
+    def update(self, action):
+        if action==0:
+            self.angle += 3 % 360
+        if action==1:
+            self.angle -= 3 % 360   
+        if action==2:
+            self.x,self.y = calculate_new_xy(self.x,self.y,1,self.angle)
+            self.rect = self.surf.get_rect(center = (self.x, self.y)) 
+        if action==3:
+            self.x,self.y = calculate_new_xy(self.x,self.y,-1,self.angle)
+            self.rect = self.surf.get_rect(center = (self.x, self.y)) 
+        #if action ==3:
+        #    x,y = calculate_new_xy(x,y,-1,self.angle)
+        self.surf = pygame.transform.rotate(self.image,self.angle)
+        self.rect = self.surf.get_rect(center = (self.x, self.y)) 
+        
+        
 
         # Keep player on the screen
         if self.rect.left < 0:
@@ -129,7 +141,7 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.image.load("blue_van.png").convert_alpha()
+        self.surf = pygame.image.load(os.path.join(os.path.dirname(__file__), "pictures/blue_van.png")).convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.surf = pygame.transform.scale(self.surf,(SCALE*2,SCALE))
         # The starting position is randomly generated, as is the speed
@@ -150,7 +162,7 @@ class Enemy(pygame.sprite.Sprite):
 class Door(pygame.sprite.Sprite):
     def __init__(self):
         super(Door, self).__init__()
-        self.surf = pygame.image.load("castledoors.png").convert_alpha()
+        self.surf = pygame.image.load(os.path.join(os.path.dirname(__file__), "pictures/castledoors.png")).convert_alpha()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.surf = pygame.transform.scale(self.surf,(SCALE,SCALE))
         self.rect = self.surf.get_rect(
@@ -169,4 +181,9 @@ class Background(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = location
-    
+
+def calculate_new_xy(x,y,speed,angle):
+    new_x = x - (speed*math.sin(angle*math.pi/180))
+    new_y = y - (speed*math.cos(angle*math.pi/180))
+    #print(angle,',',speed*math.sin(angle*math.pi/180) ,',',(speed*math.cos(angle*math.pi/180)), ',',x, new_x,',',y, new_y)
+    return new_x, new_y
