@@ -21,8 +21,8 @@ class Chrisww_gym(gym.Env):
     def __init__(self):
         pygame.init()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(np.zeros((DIM*DIM)),
-            np.full((DIM*DIM),2) , dtype=np.int16)
+        self.observation_space = spaces.Box(np.zeros((DIM*DIM*2)),
+            np.full((DIM*DIM*2),True ), dtype=np.bool)
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.player = Player()
@@ -49,8 +49,8 @@ class Chrisww_gym(gym.Env):
     
     def reset(self):
         pygame.init()
-        self.observation_space = spaces.Box(np.zeros((DIM*DIM)),
-            np.full((DIM*DIM),2) , dtype=np.int16)
+        self.observation_space = spaces.Box(np.zeros((DIM*DIM*2)),
+            np.full((DIM*DIM*2),True ), dtype=np.bool)
         self.action_space = spaces.Discrete(4)
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -74,10 +74,10 @@ class Chrisww_gym(gym.Env):
         pygame.quit()
     
     def get_state(self):
-        state=np.zeros((DIM,DIM))
+        state=np.zeros((DIM,DIM,2),dtype=np.bool)
         for entity in self.all_sprites:
             self.screen.blit(entity.surf,(entity.x*SCALE+1,entity.y*SCALE+1))
-            state[entity.x,entity.y]=entity.colour
+            state[entity.x,entity.y,entity.colour]=True
         return state
 
 
@@ -89,7 +89,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.x=random.randint(0,DIM-1)
         self.y=random.randint(0,DIM-1)
-        self.colour=1
+        self.colour=0
 
     def update(self, action):
         if action==0:
@@ -113,7 +113,7 @@ class Door(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.x=random.randint(0,DIM-1)
         self.y=random.randint(0,DIM-1)
-        self.colour=2
+        self.colour=1
 
 class Block(pygame.sprite.Sprite):
     def __init__(self):
