@@ -20,7 +20,7 @@ class Chrisww_gym(gym.Env):
    
     def __init__(self):
         pygame.init()
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(5)
         self.observation_space = spaces.Box(np.zeros((DIM*DIM*2)),
             np.full((DIM*DIM*2),True ), dtype=np.bool)
         self.clock = pygame.time.Clock()
@@ -51,7 +51,7 @@ class Chrisww_gym(gym.Env):
         pygame.init()
         self.observation_space = spaces.Box(np.zeros((DIM*DIM*2)),
             np.full((DIM*DIM*2),True ), dtype=np.bool)
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(5)
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.player = Player()
